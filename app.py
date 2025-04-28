@@ -1,47 +1,45 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
-# Create Flask app
 app = Flask(__name__)
-
-# Configure database (using SQLite for now)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///appointments.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Create database object
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///barbershop.db'
 db = SQLAlchemy(app)
 
-# Define Appointment model
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    time = db.Column(db.String(100), nullable=False)
+    customer_name = db.Column(db.String(100))
+    customer_phone = db.Column(db.String(20))
+    barber_name = db.Column(db.String(100))
+    service = db.Column(db.String(100))
+    appointment_time = db.Column(db.DateTime)
 
-# Initialize the database
-with app.app_context():
-    db.create_all()
-
-# Routes
-@app.route('/')
-def home():
-    return "Welcome to the Barbershop Appointment API!"
-
-@app.route('/appointments', methods=['POST'])
-def create_appointment():
-    data = request.get_json()
-    new_appointment = Appointment(name=data['name'], time=data['time'])
-    db.session.add(new_appointment)
+@app.route('/book', methods=['POST'])
+def book_appointment():
+    data = request.json
+    appointment = Appointment(
+        customer_name=data['customer_name'],
+        customer_phone=data['customer_phone'],
+        barber_name=data['barber_name'],
+        service=data['service'],
+        appointment_time=datetime.strptime(data['appointment_time'], '%Y-%m-%d %H:%M')
+    )
+    db.session.add(appointment)
     db.session.commit()
-    return jsonify({'message': 'Appointment created!'}), 201
+    return jsonify({'message': 'Appointment booked successfully!'})
 
 @app.route('/appointments', methods=['GET'])
-def get_appointments():
+def list_appointments():
     appointments = Appointment.query.all()
-    output = []
-    for appointment in appointments:
-        output.append({'name': appointment.name, 'time': appointment.time})
-    return jsonify(output)
+    result = []
+    for a in appointments:
+        result.append({
+            'customer_name': a.customer_name,
+            'barber_name': a.barber_name,
+            'service': a.service,
+            'appointment_time': a.appointment_time.strftime('%Y-%m-%d %H:%M')
+        })
+    return jsonify(result)
 
-# Run locally if needed
 if __name__ == '__main__':
     app.run(debug=True)
