@@ -1,0 +1,28 @@
+<form id="appointmentForm">
+    Name: <input type="text" id="customer_name" required><br>
+    Phone: <input type="text" id="customer_phone" required><br>
+    Barber: <input type="text" id="barber_name" required><br>
+    Service: <input type="text" id="service" required><br>
+    Date & Time: <input type="datetime-local" id="appointment_time" required><br>
+    <button type="submit">Book Appointment</button>
+  </form>
+  
+  <script>
+  document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const response = await fetch('/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              customer_name: document.getElementById('customer_name').value,
+              customer_phone: document.getElementById('customer_phone').value,
+              barber_name: document.getElementById('barber_name').value,
+              service: document.getElementById('service').value,
+              appointment_time: document.getElementById('appointment_time').value
+          })
+      });
+      const result = await response.json();
+      alert(result.message);
+  });
+  </script>
+  
